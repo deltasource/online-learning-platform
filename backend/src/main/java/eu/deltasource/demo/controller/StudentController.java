@@ -5,11 +5,10 @@ import eu.deltasource.demo.service.StudentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/students")
+@RequestMapping("/students/v1")
 public class StudentController {
 
     private final StudentService studentService;
@@ -19,11 +18,7 @@ public class StudentController {
     }
 
     @PostMapping
-    public ResponseEntity<String> createStudent(@Valid @RequestBody StudentDTO studentDTO, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            return new ResponseEntity<>(bindingResult.getAllErrors().get(0).getDefaultMessage(), HttpStatus.BAD_REQUEST);
-        }
-
+    public ResponseEntity<String> createStudent(@Valid @RequestBody StudentDTO studentDTO) {
         String message = studentService.createStudent(studentDTO);
         if (message.equals("Student created successfully.")) {
             return new ResponseEntity<>(message, HttpStatus.CREATED);
