@@ -1,4 +1,4 @@
-package eu.deltasource.demo;
+package eu.deltasource.demo.service;
 
 import eu.deltasource.demo.DTOs.StudentDTO;
 import org.springframework.stereotype.Service;
