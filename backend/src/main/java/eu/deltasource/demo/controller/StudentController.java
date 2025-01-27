@@ -1,7 +1,7 @@
 package eu.deltasource.demo.controller;
 
 import eu.deltasource.demo.DTOs.StudentDTO;
-import eu.deltasource.demo.StudentService;
+import eu.deltasource.demo.service.StudentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
