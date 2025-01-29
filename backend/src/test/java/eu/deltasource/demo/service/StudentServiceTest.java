@@ -4,7 +4,7 @@ import eu.deltasource.demo.DTOs.StudentDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 
 public class StudentServiceTest {
 
@@ -24,8 +24,8 @@ public class StudentServiceTest {
         String result = studentService.createStudent(newStudent);
 
         // Then
-        assertEquals("Student created successfully.", result);
-        assertEquals(newStudent, studentService.getStudentByEmail("test@test.com"));
+        assertThat(result).isEqualTo("Student created successfully.");
+        assertThat(studentService.getStudentByEmail("test@test.com")).isEqualTo(newStudent);
     }
 
     @Test
@@ -38,7 +38,7 @@ public class StudentServiceTest {
         String result = studentService.createStudent(existingStudent);
 
         // Then
-        assertEquals("Email already registered.", result);
+        assertThat(result).isEqualTo("Email already registered.");
     }
 
     @Test
@@ -51,7 +51,7 @@ public class StudentServiceTest {
         StudentDTO result = studentService.getStudentByEmail("test@example.com");
 
         // Then
-        assertEquals(student, result);
+        assertThat(result).isEqualTo(student);
     }
 
     @Test
@@ -60,7 +60,7 @@ public class StudentServiceTest {
         StudentDTO result = studentService.getStudentByEmail("nonexistent@example.com");
 
         // Then
-        assertNull(result);
+        assertThat(result).isNull();
     }
 
     @Test
@@ -73,8 +73,8 @@ public class StudentServiceTest {
         String result = studentService.deleteStudent("test@example.com");
 
         // Then
-        assertEquals("Student deleted successfully.", result);
-        assertNull(studentService.getStudentByEmail("test@example.com"));
+        assertThat(result).isEqualTo("Student deleted successfully.");
+        assertThat(studentService.getStudentByEmail("test@example.com")).isNull();
     }
 
     @Test
@@ -83,6 +83,6 @@ public class StudentServiceTest {
         String result = studentService.deleteStudent("nonexistent@example.com");
 
         // Then
-        assertEquals("Student not found.", result);
+        assertThat(result).isEqualTo("Student not found.");
     }
 }
