@@ -8,12 +8,7 @@ import static org.assertj.core.api.Assertions.*;
 
 public class StudentServiceTest {
 
-    private StudentService studentService;
-
-    @BeforeEach
-    void setUp(){
-        studentService = new StudentService();
-    }
+    private final StudentService studentService = new StudentService();
 
     @Test
     void givenNewStudent_whenCreatingStudent_thenStudentIsCreatedSuccessfully() {
