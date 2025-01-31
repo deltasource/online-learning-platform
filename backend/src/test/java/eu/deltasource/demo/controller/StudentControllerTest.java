@@ -9,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.Optional;
 
@@ -40,13 +41,14 @@ public class StudentControllerTest {
 
         when(studentService.createStudent(any(StudentDTO.class))).thenReturn(Optional.of(studentDTO));
 
-        // When & Then
-        mockMvc.perform(post("/students/v1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(asJsonString(studentDTO)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.email").value("test@example.com"))
-                .andExpect(jsonPath("$.fullName").value("Test Student"));
+        // When
+        ResultActions result = mockMvc.perform(post("/students/v1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(studentDTO)));
+
+        // Then
+        result.andExpect(status().isCreated())
+                .andExpect(content().json(objectMapper.writeValueAsString(studentDTO)));
     }
 
     @Test
@@ -60,11 +62,13 @@ public class StudentControllerTest {
 
         when(studentService.createStudent(any(StudentDTO.class))).thenReturn(Optional.empty());
 
-        // When & Then
-        mockMvc.perform(post("/students/v1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(asJsonString(studentDTO)))
-                .andExpect(status().isConflict());
+        // When
+        ResultActions result = mockMvc.perform(post("/students/v1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(studentDTO)));
+
+        // Then
+        result.andExpect(status().isConflict());
     }
 
     @Test
@@ -78,11 +82,12 @@ public class StudentControllerTest {
 
         when(studentService.getStudentByEmail("get@example.com")).thenReturn(Optional.of(studentDTO));
 
-        // When & Then
-        mockMvc.perform(get("/students/v1/get@example.com"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("get@example.com"))
-                .andExpect(jsonPath("$.fullName").value("Get Student"));
+        // When
+        ResultActions result = mockMvc.perform(get("/students/v1/get@example.com"));
+
+        // Then
+        result.andExpect(status().isOk())
+                .andExpect(content().json(objectMapper.writeValueAsString(studentDTO)));
     }
 
     @Test
@@ -90,9 +95,11 @@ public class StudentControllerTest {
         // Given
         when(studentService.getStudentByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
-        // When & Then
-        mockMvc.perform(get("/students/v1/nonexistent@example.com"))
-                .andExpect(status().isNotFound());
+        // When
+        ResultActions result = mockMvc.perform(get("/students/v1/nonexistent@example.com"));
+
+        // Then
+        result.andExpect(status().isNotFound());
     }
 
     @Test
@@ -100,9 +107,11 @@ public class StudentControllerTest {
         // Given
         when(studentService.deleteStudent("delete@example.com")).thenReturn(true);
 
-        // When & Then
-        mockMvc.perform(delete("/students/v1/delete@example.com"))
-                .andExpect(status().isNoContent());
+        // When
+        ResultActions result = mockMvc.perform(delete("/students/v1/delete@example.com"));
+
+        // Then
+        result.andExpect(status().isNoContent());
     }
 
     @Test
@@ -110,16 +119,10 @@ public class StudentControllerTest {
         // Given
         when(studentService.deleteStudent("nonexistent@example.com")).thenReturn(false);
 
-        // When & Then
-        mockMvc.perform(delete("/students/v1/nonexistent@example.com"))
-                .andExpect(status().isNotFound());
-    }
+        // When
+        ResultActions result = mockMvc.perform(delete("/students/v1/nonexistent@example.com"));
 
-    private String asJsonString(final Object obj) {
-        try {
-            return objectMapper.writeValueAsString(obj);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        // Then
+        result.andExpect(status().isNotFound());
     }
 }
