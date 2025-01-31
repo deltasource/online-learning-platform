@@ -1,83 +1,95 @@
 package eu.deltasource.demo.service;
 
 import eu.deltasource.demo.DTOs.StudentDTO;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 
-public class StudentServiceTest {
+class StudentServiceTest {
 
     private final StudentService studentService = new StudentService();
 
     @Test
     void givenNewStudent_whenCreatingStudent_thenStudentIsCreatedSuccessfully() {
         // Given
-        StudentDTO newStudent = new StudentDTO(1,"test@test.com", "Test");
+        StudentDTO newStudent = new StudentDTO(1, "test@test.com", "Test Student");
 
         // When
-        String result = studentService.createStudent(newStudent);
+        Optional<StudentDTO> result = studentService.createStudent(newStudent);
 
         // Then
-        assertThat(result).isEqualTo("Student created successfully.");
-        assertThat(studentService.getStudentByEmail("test@test.com")).isEqualTo(newStudent);
+        assertThat(result).isPresent();
+        assertThat(result).hasValueSatisfying(createdStudent -> {
+            assertThat(createdStudent.getId()).isEqualTo(newStudent.getId());
+            assertThat(createdStudent.getEmail()).isEqualTo(newStudent.getEmail());
+            assertThat(createdStudent.getFullName()).isEqualTo(newStudent.getFullName());
+        });
+        assertThat(studentService.getStudentByEmail("test@test.com")).isPresent().contains(newStudent);
     }
 
     @Test
     void givenExistingStudentEmail_whenCreatingStudent_thenCreationFails() {
         // Given
-        StudentDTO existingStudent = new StudentDTO(1,"test@test.com", "test");
+        StudentDTO existingStudent = new StudentDTO(1, "test@test.com", "Existing Student");
         studentService.createStudent(existingStudent);
 
         // When
-        String result = studentService.createStudent(existingStudent);
+        Optional<StudentDTO> result = studentService.createStudent(existingStudent);
 
         // Then
-        assertThat(result).isEqualTo("Email already registered.");
+        assertThat(result).isEmpty();
     }
 
     @Test
     void givenExistingStudent_whenGettingStudentByEmail_thenCorrectStudentIsReturned() {
         // Given
-        StudentDTO student = new StudentDTO(1, "test@example.com", "test test");
+        StudentDTO student = new StudentDTO(1, "test@example.com", "Test Student");
         studentService.createStudent(student);
 
         // When
-        StudentDTO result = studentService.getStudentByEmail("test@example.com");
+        Optional<StudentDTO> result = studentService.getStudentByEmail("test@example.com");
 
         // Then
-        assertThat(result).isEqualTo(student);
+        assertThat(result).isPresent();
+        assertThat(result).hasValueSatisfying(retrievedStudent -> {
+            assertThat(retrievedStudent.getId()).isEqualTo(student.getId());
+            assertThat(retrievedStudent.getEmail()).isEqualTo(student.getEmail());
+            assertThat(retrievedStudent.getFullName()).isEqualTo(student.getFullName());
+        });
     }
 
     @Test
-    void givenNonExistentEmail_whenGettingStudentByEmail_thenNullIsReturned() {
+    void givenNonExistentEmail_whenGettingStudentByEmail_thenEmptyOptionalIsReturned() {
         // When
-        StudentDTO result = studentService.getStudentByEmail("nonexistent@example.com");
+        Optional<StudentDTO> result = studentService.getStudentByEmail("nonexistent@example.com");
 
         // Then
-        assertThat(result).isNull();
+        assertThat(result).isEmpty();
     }
 
     @Test
     void givenExistingStudent_whenDeletingStudent_thenStudentIsDeletedSuccessfully() {
         // Given
-        StudentDTO student = new StudentDTO(1,"test@example.com", "test test");
+        StudentDTO student = new StudentDTO(1, "test@example.com", "Test Student");
         studentService.createStudent(student);
 
         // When
-        String result = studentService.deleteStudent("test@example.com");
+        boolean result = studentService.deleteStudent("test@example.com");
 
         // Then
-        assertThat(result).isEqualTo("Student deleted successfully.");
-        assertThat(studentService.getStudentByEmail("test@example.com")).isNull();
+        assertThat(result).isTrue();
+        assertThat(studentService.getStudentByEmail("test@example.com")).isEmpty();
     }
 
     @Test
     void givenNonExistentEmail_whenDeletingStudent_thenDeletionFails() {
         // When
-        String result = studentService.deleteStudent("nonexistent@example.com");
+        boolean result = studentService.deleteStudent("nonexistent@example.com");
 
         // Then
-        assertThat(result).isEqualTo("Student not found.");
+        assertThat(result).isFalse();
     }
 }
