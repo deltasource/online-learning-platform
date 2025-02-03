@@ -1,83 +1,102 @@
 package eu.deltasource.demo.service;
 
 import eu.deltasource.demo.DTOs.StudentDTO;
-import org.junit.jupiter.api.BeforeEach;
+import eu.deltasource.demo.model.Student;
+import eu.deltasource.demo.repository.StudentRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.assertj.core.api.Assertions.*;
+import java.util.Optional;
 
-public class StudentServiceTest {
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-    private final StudentService studentService = new StudentService();
+@ExtendWith(MockitoExtension.class)
+class StudentServiceTest {
+
+    @Mock
+    private StudentRepository studentRepository;
+
+    @InjectMocks
+    private StudentService studentService;
 
     @Test
     void givenNewStudent_whenCreatingStudent_thenStudentIsCreatedSuccessfully() {
         // Given
-        StudentDTO newStudent = new StudentDTO(1,"test@test.com", "Test");
+        StudentDTO newStudent = new StudentDTO(1, "test@example.com", "Test Student");
+        Student savedStudent = new Student(1, "test@example.com", "Test Student");
 
         // When
-        String result = studentService.createStudent(newStudent);
+        StudentDTO result = studentService.createStudent(newStudent);
 
         // Then
-        assertThat(result).isEqualTo("Student created successfully.");
-        assertThat(studentService.getStudentByEmail("test@test.com")).isEqualTo(newStudent);
-    }
-
-    @Test
-    void givenExistingStudentEmail_whenCreatingStudent_thenCreationFails() {
-        // Given
-        StudentDTO existingStudent = new StudentDTO(1,"test@test.com", "test");
-        studentService.createStudent(existingStudent);
-
-        // When
-        String result = studentService.createStudent(existingStudent);
-
-        // Then
-        assertThat(result).isEqualTo("Email already registered.");
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(newStudent.getId());
+        assertThat(result.getEmail()).isEqualTo(newStudent.getEmail());
+        assertThat(result.getFullName()).isEqualTo(newStudent.getFullName());
+        verify(studentRepository, times(1)).save(any(Student.class));
     }
 
     @Test
     void givenExistingStudent_whenGettingStudentByEmail_thenCorrectStudentIsReturned() {
         // Given
-        StudentDTO student = new StudentDTO(1, "test@example.com", "test test");
-        studentService.createStudent(student);
+        String email = "test@example.com";
+        Student existingStudent = new Student(1, email, "Test Student");
+        when(studentRepository.getByEmail(email)).thenReturn(Optional.of(existingStudent));
 
         // When
-        StudentDTO result = studentService.getStudentByEmail("test@example.com");
+        StudentDTO result = studentService.getStudentByEmail(email);
 
         // Then
-        assertThat(result).isEqualTo(student);
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(existingStudent.getId());
+        assertThat(result.getEmail()).isEqualTo(existingStudent.getEmail());
+        assertThat(result.getFullName()).isEqualTo(existingStudent.getFullName());
+        verify(studentRepository, times(1)).getByEmail(email);
     }
 
     @Test
-    void givenNonExistentEmail_whenGettingStudentByEmail_thenNullIsReturned() {
-        // When
-        StudentDTO result = studentService.getStudentByEmail("nonexistent@example.com");
-
-        // Then
-        assertThat(result).isNull();
-    }
-
-    @Test
-    void givenExistingStudent_whenDeletingStudent_thenStudentIsDeletedSuccessfully() {
+    void givenNonExistentStudent_whenGettingStudentByEmail_thenExceptionIsThrown() {
         // Given
-        StudentDTO student = new StudentDTO(1,"test@example.com", "test test");
-        studentService.createStudent(student);
+        String nonExistentEmail = "nonexistent@example.com";
+        when(studentRepository.getByEmail(nonExistentEmail)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThatThrownBy(() -> studentService.getStudentByEmail(nonExistentEmail))
+                .isInstanceOf(RuntimeException.class);
+        verify(studentRepository, times(1)).getByEmail(nonExistentEmail);
+    }
+
+    @Test
+    void givenExistingStudent_whenDeletingStudent_thenDeletionSucceeds() {
+        // Given
+        String email = "test@example.com";
+        when(studentRepository.remove(email)).thenReturn(true);
 
         // When
-        String result = studentService.deleteStudent("test@example.com");
+        boolean result = studentService.deleteStudent(email);
 
         // Then
-        assertThat(result).isEqualTo("Student deleted successfully.");
-        assertThat(studentService.getStudentByEmail("test@example.com")).isNull();
+        assertThat(result).isTrue();
+        verify(studentRepository, times(1)).remove(email);
     }
 
     @Test
     void givenNonExistentEmail_whenDeletingStudent_thenDeletionFails() {
+        // Given
+        String nonExistentEmail = "nonexistent@example.com";
+        when(studentRepository.remove(nonExistentEmail)).thenReturn(false);
+
         // When
-        String result = studentService.deleteStudent("nonexistent@example.com");
+        boolean result = studentService.deleteStudent(nonExistentEmail);
 
         // Then
-        assertThat(result).isEqualTo("Student not found.");
+        assertThat(result).isFalse();
+        verify(studentRepository, times(1)).remove(nonExistentEmail);
     }
 }

@@ -1,33 +1,37 @@
 package eu.deltasource.demo.service;
 
 import eu.deltasource.demo.DTOs.StudentDTO;
+import eu.deltasource.demo.exception.StudentNotFoundException;
+import eu.deltasource.demo.model.Student;
+import eu.deltasource.demo.repository.StudentRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 
+@RequiredArgsConstructor
 @Service
 public class StudentService {
 
-    private static final Map<String, StudentDTO> studentDatabase = new HashMap<>();
+    private final StudentRepository studentRepository;
 
-    public String createStudent(StudentDTO studentDTO) {
-        if (studentDatabase.containsKey(studentDTO.getEmail())) {
-            return "Email already registered.";
-        }
-        studentDatabase.put(studentDTO.getEmail(), studentDTO);
-        return "Student created successfully.";
+    public StudentDTO createStudent(StudentDTO studentDTO) {
+        Student student = new Student(studentDTO.getId(), studentDTO.getEmail(), studentDTO.getFullName());
+        studentRepository.save(student);
+        return new StudentDTO(student.getId(), student.getEmail(), student.getFullName());
     }
 
     public StudentDTO getStudentByEmail(String email) {
-        return studentDatabase.get(email);
+        Optional<Student> optionalStudent = studentRepository.getByEmail(email);
+
+        if (optionalStudent.isEmpty()) {
+            throw new StudentNotFoundException(email);
+        }
+        Student student = optionalStudent.get();
+        return new StudentDTO(student.getId(), student.getEmail(), student.getFullName());
     }
 
-    public String deleteStudent(String email) {
-        if (!studentDatabase.containsKey(email)) {
-            return "Student not found.";
-        }
-        studentDatabase.remove(email);
-        return "Student deleted successfully.";
+    public boolean deleteStudent(String email) {
+        return studentRepository.remove(email);
     }
 }
