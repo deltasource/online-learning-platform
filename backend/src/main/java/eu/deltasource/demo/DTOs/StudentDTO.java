@@ -2,16 +2,15 @@ package eu.deltasource.demo.DTOs;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class StudentDTO {
+
     private int id;
 
     @NotEmpty(message = "Email is required.")
@@ -20,4 +19,5 @@ public class StudentDTO {
 
     @NotEmpty(message = "Full name is required.")
     private String fullName;
+
 }

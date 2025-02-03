@@ -11,10 +11,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.Optional;
-
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -31,7 +29,7 @@ public class StudentControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    public void givenValidStudentData_whenCreatingStudent_thenReturnCreatedStatus() throws Exception {
+    public void givenValidStudentData_whenCreatingStudent_thenReturnCreatedStudent() throws Exception {
         // Given
         StudentDTO studentDTO = StudentDTO.builder()
                 .id(1)
@@ -39,7 +37,7 @@ public class StudentControllerTest {
                 .fullName("Test Student")
                 .build();
 
-        when(studentService.createStudent(any(StudentDTO.class))).thenReturn(Optional.of(studentDTO));
+        when(studentService.createStudent(any(StudentDTO.class))).thenReturn(studentDTO);
 
         // When
         ResultActions result = mockMvc.perform(post("/students/v1")
@@ -47,12 +45,12 @@ public class StudentControllerTest {
                 .content(objectMapper.writeValueAsString(studentDTO)));
 
         // Then
-        result.andExpect(status().isCreated())
+        result.andExpect(status().isOk())
                 .andExpect(content().json(objectMapper.writeValueAsString(studentDTO)));
     }
 
     @Test
-    public void givenExistingEmail_whenCreatingStudent_thenReturnConflict() throws Exception {
+    public void givenExistingEmail_whenCreatingStudent_thenReturnNull() throws Exception {
         // Given
         StudentDTO studentDTO = StudentDTO.builder()
                 .id(1)
@@ -60,7 +58,7 @@ public class StudentControllerTest {
                 .fullName("Existing Student")
                 .build();
 
-        when(studentService.createStudent(any(StudentDTO.class))).thenReturn(Optional.empty());
+        when(studentService.createStudent(any(StudentDTO.class))).thenReturn(null);
 
         // When
         ResultActions result = mockMvc.perform(post("/students/v1")
@@ -68,7 +66,8 @@ public class StudentControllerTest {
                 .content(objectMapper.writeValueAsString(studentDTO)));
 
         // Then
-        result.andExpect(status().isConflict());
+        result.andExpect(status().isOk())
+                .andExpect(content().string(""));
     }
 
     @Test
@@ -80,10 +79,10 @@ public class StudentControllerTest {
                 .fullName("Get Student")
                 .build();
 
-        when(studentService.getStudentByEmail("get@example.com")).thenReturn(Optional.of(studentDTO));
+        when(studentService.getStudentByEmail("get@example.com")).thenReturn(studentDTO);
 
         // When
-        ResultActions result = mockMvc.perform(get("/students/v1/get@example.com"));
+        ResultActions result = mockMvc.perform(get("/students/v1/{email}", "get@example.com"));
 
         // Then
         result.andExpect(status().isOk())
@@ -91,38 +90,41 @@ public class StudentControllerTest {
     }
 
     @Test
-    public void givenNonExistentStudentEmail_whenGettingStudent_thenReturnNotFound() throws Exception {
+    public void givenNonExistentStudentEmail_whenGettingStudent_thenReturnNull() throws Exception {
         // Given
-        when(studentService.getStudentByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
+        when(studentService.getStudentByEmail("nonexistent@example.com")).thenReturn(null);
 
         // When
-        ResultActions result = mockMvc.perform(get("/students/v1/nonexistent@example.com"));
+        ResultActions result = mockMvc.perform(get("/students/v1/{email}", "nonexistent@example.com"));
 
         // Then
-        result.andExpect(status().isNotFound());
+        result.andExpect(status().isOk())
+                .andExpect(content().string(""));
     }
 
     @Test
-    public void givenExistingStudentEmail_whenDeletingStudent_thenReturnNoContent() throws Exception {
+    public void givenExistingStudentEmail_whenDeletingStudent_thenReturnTrue() throws Exception {
         // Given
         when(studentService.deleteStudent("delete@example.com")).thenReturn(true);
 
         // When
-        ResultActions result = mockMvc.perform(delete("/students/v1/delete@example.com"));
+        ResultActions result = mockMvc.perform(delete("/students/v1/{email}", "delete@example.com"));
 
         // Then
-        result.andExpect(status().isNoContent());
+        result.andExpect(status().isOk())
+                .andExpect(content().string("true"));
     }
 
     @Test
-    public void givenNonExistentStudentEmail_whenDeletingStudent_thenReturnNotFound() throws Exception {
+    public void givenNonExistentStudentEmail_whenDeletingStudent_thenReturnFalse() throws Exception {
         // Given
         when(studentService.deleteStudent("nonexistent@example.com")).thenReturn(false);
 
         // When
-        ResultActions result = mockMvc.perform(delete("/students/v1/nonexistent@example.com"));
+        ResultActions result = mockMvc.perform(delete("/students/v1/{email}", "nonexistent@example.com"));
 
         // Then
-        result.andExpect(status().isNotFound());
+        result.andExpect(status().isOk())
+                .andExpect(content().string("false"));
     }
 }

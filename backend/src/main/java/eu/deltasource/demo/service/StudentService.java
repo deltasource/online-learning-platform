@@ -13,21 +13,16 @@ public class StudentService {
 
     private final Map<String, Student> studentDatabase = new HashMap<>();
 
-    public Optional<StudentDTO> createStudent(StudentDTO studentDTO) {
-        if (studentDatabase.containsKey(studentDTO.getEmail())) {
-            return Optional.empty();
-        }
+    public StudentDTO createStudent(StudentDTO studentDTO) {
+
         Student student = new Student(studentDTO.getId(), studentDTO.getEmail(), studentDTO.getFullName());
         studentDatabase.put(student.getEmail(), student);
-        return Optional.of(studentDTO);
+        return new StudentDTO(student.getId(), student.getEmail(), student.getFullName());
     }
 
-    public Optional<StudentDTO> getStudentByEmail(String email) {
+    public StudentDTO getStudentByEmail(String email) {
         Student student = studentDatabase.get(email);
-        if (student == null) {
-            return Optional.empty();
-        }
-        return Optional.of(new StudentDTO(student.getId(), student.getEmail(), student.getFullName()));
+        return new StudentDTO(student.getId(), student.getEmail(), student.getFullName());
     }
 
     public boolean deleteStudent(String email) {
