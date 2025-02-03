@@ -21,6 +21,7 @@ public class StudentController {
     }
 
     @GetMapping("/{email}")
+    @ResponseStatus
     public StudentDTO getStudentByEmail(@PathVariable String email) {
         return studentService.getStudentByEmail(email);
     }

@@ -19,5 +19,4 @@ public class StudentDTO {
 
     @NotEmpty(message = "Full name is required.")
     private String fullName;
-
 }
