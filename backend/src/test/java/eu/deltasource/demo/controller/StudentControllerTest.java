@@ -147,4 +147,18 @@ public class StudentControllerTest {
                 .andExpect(jsonPath("$.message").value("Student not found with this email: " + nonExistentEmail))
                 .andExpect(jsonPath("$.timestamp").exists());
     }
+
+    @Test
+    public void getStudentByEmail_NullPointerException_ReturnsInternalServerError() throws Exception {
+        // Given
+        String email = "test@example.com";
+        when(studentService.getStudentByEmail(anyString()))
+                .thenThrow(new NullPointerException("Simulated NullPointerException"));
+
+        // When & Then
+        mockMvc.perform(get("/students/v1/" + email)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.status").value(500));
+    }
 }
